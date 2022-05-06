@@ -3,24 +3,23 @@ import javax.swing.JButton;
 import javax.security.auth.callback.LanguageCallback;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import javax.swing.text.AttributeSet.ColorAttribute;
-import java.awt.Color;
 
 public class lagSwitch extends JFrame implements ActionListener
 {
     JButton toggleLag;
+    JButton pulseLag;
     int toggled = 1;
 
 
-    public int toggle(int val)
+    public void toggle()
     {
-        if (val == 0)
+        if (toggled == 0)
         {
-            return 1;
+            toggled = 1;
         }
         else
         {
-            return 0;
+            toggled = 0;
         }
     }
 
@@ -36,25 +35,43 @@ public class lagSwitch extends JFrame implements ActionListener
         }
     }
 
+    public void wifi(String state)
+    {
+        try
+            {
+                Process process = Runtime.getRuntime().exec("nmcli radio wifi " + state);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                System.out.println("FAILED\nRun \"nmcli radio wifi on\" to regain WIFI");
+            }
+    }
+
 
     public lagSwitch()
     {
         //to make the GUI
-        JButton toggleLag = new JButton("LAG");
+        toggleLag = new JButton("Toggle");
+        pulseLag = new JButton("Pulse");
 
-        toggleLag.setBounds(15, 15, 75, 25);
+        toggleLag.setBounds(15, 15, 100, 25);
         toggleLag.addActionListener(this);
         toggleLag.setFocusable(false);
+        pulseLag.setBounds(15, 55, 100, 25);
+        pulseLag.addActionListener(this);
+        pulseLag.setFocusable(false);
 
-        this.setTitle("A.C.M.E. lagswitch v0.1");
+        this.setTitle("Lagswitch v0.2");
         this.setVisible(true);
         this.setResizable(false);
         this.setLayout(null);
-        this.setSize(300, 150);
+        this.setSize(300, 129);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setAlwaysOnTop(true);
 
         this.add(toggleLag);
+        this.add(pulseLag);
     }
 
 
@@ -66,17 +83,30 @@ public class lagSwitch extends JFrame implements ActionListener
     @Override
     public void actionPerformed(ActionEvent event)
     {
-        toggled = toggle(toggled);
-        System.out.println("WIFI " + announce(toggled));
-
-        try
+        if (event.getSource() == toggleLag)
         {
-            //just stops your wifi using linkeks quirks
-            Process process = Runtime.getRuntime().exec("nmcli radio wifi " + announce(toggled));
+            toggle();
+            System.out.println("WIFI " + announce(toggled));
+
+            wifi(announce(toggled));
         }
-        catch (Exception e) {
-        e.printStackTrace();
-        System.out.println("FAILED\nRun \"nmcli radio wifi on\" to regain WIFI");
-    }
+        if (event.getSource() == pulseLag)
+        {
+            System.out.println("Pulse");
+
+            toggle();
+            wifi(announce(toggled));
+            try
+            {
+                Thread.sleep(1000);
+            }
+            catch(InterruptedException ex)
+            {
+                Thread.currentThread().interrupt();
+            }
+            toggle();
+            wifi(announce(toggled));
+            
+        }
     }
 }
