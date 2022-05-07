@@ -1,5 +1,8 @@
 import javax.swing.JFrame;
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+import java.awt.Color;
 import javax.security.auth.callback.LanguageCallback;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -8,8 +11,48 @@ public class lagSwitch extends JFrame implements ActionListener
 {
     JButton toggleLag;
     JButton pulseLag;
+    JLabel wifiState;
+    JTextField pulseTime;
     int toggled = 1;
 
+
+    public void wifi(String state)
+    //TODO: find a way to instantly disconnect and reconnect
+    {
+        try
+            {
+                Process process = Runtime.getRuntime().exec("nmcli networking " + state);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                System.out.println("FAILED\nRun \"nmcli networking on\" to regain WIFI");
+            }
+    }
+
+    public String toString(int val)
+    {
+        if (val >= 1)
+        {
+            return "on";
+        }
+        else
+        {
+            return "off";
+        }
+    }
+
+    public boolean toBool(int val)
+    {
+        if (val >= 1)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
     public void toggle()
     {
@@ -23,55 +66,56 @@ public class lagSwitch extends JFrame implements ActionListener
         }
     }
 
-    public String announce(int val)
+    public void pulse(int ms)
     {
-        if (val >= 1)
-        {
-            return "on";
-        }
-        else
-        {
-            return "off";
-        }
-    }
-
-    public void wifi(String state)
-    {
-        try
+        toggle();
+            wifi(toString(toggled));
+            try
             {
-                Process process = Runtime.getRuntime().exec("nmcli radio wifi " + state);
+                Thread.sleep(ms);
             }
-            catch (Exception e)
+            catch(InterruptedException e)
             {
-                e.printStackTrace();
-                System.out.println("FAILED\nRun \"nmcli radio wifi on\" to regain WIFI");
+                Thread.currentThread().interrupt();
             }
+            toggle();
+            wifi(toString(toggled));
     }
 
 
     public lagSwitch()
     {
-        //to make the GUI
         toggleLag = new JButton("Toggle");
         pulseLag = new JButton("Pulse");
+        wifiState = new JLabel();
+        pulseTime = new JTextField("1000");
 
         toggleLag.setBounds(15, 15, 100, 25);
         toggleLag.addActionListener(this);
         toggleLag.setFocusable(false);
+        toggleLag.setToolTipText("Toggle internet");
         pulseLag.setBounds(15, 55, 100, 25);
         pulseLag.addActionListener(this);
         pulseLag.setFocusable(false);
+        pulseLag.setToolTipText("Pulse internet for X milliseconds");
+        wifiState.setBounds(130, 15, 100, 25);
+        wifiState.setBackground(Color.BLUE);
+        wifiState.setOpaque(true);
+        pulseTime.setBounds(130, 55, 100, 25);
+        pulseTime.setToolTipText("Time between toggling in ms (for Pulse)");
 
-        this.setTitle("Lagswitch v0.2");
+        this.setTitle("Lagswitch v0.3");
         this.setVisible(true);
         this.setResizable(false);
         this.setLayout(null);
-        this.setSize(300, 129);
+        this.setSize(255, 129);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setAlwaysOnTop(true);
 
         this.add(toggleLag);
         this.add(pulseLag);
+        this.add(pulseTime);
+        this.add(wifiState);
     }
 
 
@@ -86,27 +130,19 @@ public class lagSwitch extends JFrame implements ActionListener
         if (event.getSource() == toggleLag)
         {
             toggle();
-            System.out.println("WIFI " + announce(toggled));
-
-            wifi(announce(toggled));
+            wifi(toString(toggled));
         }
         if (event.getSource() == pulseLag)
         {
-            System.out.println("Pulse");
-
-            toggle();
-            wifi(announce(toggled));
             try
             {
-                Thread.sleep(1000);
+                pulse(Integer.parseInt(pulseTime.getText()));
             }
-            catch(InterruptedException ex)
+            catch (Exception e)
             {
-                Thread.currentThread().interrupt();
-            }
-            toggle();
-            wifi(announce(toggled));
-            
+                pulse(1000);
+            };
         }
+        wifiState.setVisible(toBool(toggled));
     }
 }
