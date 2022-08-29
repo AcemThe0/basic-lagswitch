@@ -12,14 +12,14 @@ public class lagSwitch extends JFrame implements ActionListener
 {
     JButton toggleLag;
     JButton pulseLag;
+    JButton tryFix;
     JLabel wifiState;
     JTextField pulseTime;
     JCheckBox offset;
-    int toggled = 1;
+    boolean wifi = true;
 
 
     public void wifi(String state)
-    //TODO: find a way to instantly disconnect and reconnect
     {
         try
             {
@@ -32,9 +32,9 @@ public class lagSwitch extends JFrame implements ActionListener
             }
     }
 
-    public String valToString(int val)
+    public String valToString(boolean val)
     {
-        if (val >= 1)
+        if (val == true)
         {
             return "on";
         }
@@ -44,34 +44,11 @@ public class lagSwitch extends JFrame implements ActionListener
         }
     }
 
-    public boolean toBool(int val)
-    {
-        if (val >= 1)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    public void toggle()
-    {
-        if (toggled == 0)
-        {
-            toggled = 1;
-        }
-        else
-        {
-            toggled = 0;
-        }
-    }
-
     public void pulse(int ms)
     {
-        toggle();
-            wifi(valToString(toggled));
+        wifi = !wifi;
+        wifiState.setVisible(wifi);
+            wifi(valToString(wifi));
             try
             {
                 Thread.sleep(ms);
@@ -80,8 +57,8 @@ public class lagSwitch extends JFrame implements ActionListener
             {
                 Thread.currentThread().interrupt();
             }
-            toggle();
-            wifi(valToString(toggled));
+            wifi = !wifi;
+            wifi(valToString(wifi));
     }
 
 
@@ -89,32 +66,41 @@ public class lagSwitch extends JFrame implements ActionListener
     {
         toggleLag = new JButton("Toggle");
         pulseLag = new JButton("Pulse");
-        wifiState = new JLabel();
         pulseTime = new JTextField("1000");
         offset = new JCheckBox("offset");
+        wifiState = new JLabel();
+        tryFix = new JButton("Try fix");
 
         toggleLag.setBounds(15, 15, 100, 25);
-        toggleLag.addActionListener(this);
-        toggleLag.setFocusable(false);
-        toggleLag.setToolTipText("Toggle internet");
         pulseLag.setBounds(15, 55, 100, 25);
-        pulseLag.addActionListener(this);
-        pulseLag.setFocusable(false);
-        pulseLag.setToolTipText("Pulse internet for X milliseconds");
+        pulseTime.setBounds(130, 55, 100, 25);
+        offset.setBounds(130, 15, 100, 25);
         wifiState.setBounds(15, 95, 215, 25);
+        tryFix.setBounds(15, 135, 215, 25);
+
+        toggleLag.setToolTipText("Toggle internet");
+        pulseLag.setToolTipText("Pulse internet for X milliseconds");
+        pulseTime.setToolTipText("Time between toggling in ms (for Pulse)");
+        offset.setToolTipText("Slightly change pulse time");
+        tryFix.setToolTipText("Force turn on WIFI");
+
+        toggleLag.setFocusable(false);
+        pulseLag.setFocusable(false);
+        offset.setFocusable(false);
+        tryFix.setFocusable(false);
+
+        toggleLag.addActionListener(this);
+        pulseLag.addActionListener(this);
+        tryFix.addActionListener(this);
+
         wifiState.setBackground(Color.BLUE);
         wifiState.setOpaque(true);
-        pulseTime.setBounds(130, 55, 100, 25);
-        pulseTime.setToolTipText("Time between toggling in ms (for Pulse)");
-        offset.setBounds(130, 15, 100, 25);
-        offset.setFocusable(false);
-        offset.setToolTipText("Slightly change pulse time");
 
-        this.setTitle("Lagswitch v0.4");
+        this.setTitle("Lagswitch v0.5");
         this.setVisible(true);
         this.setResizable(false);
         this.setLayout(null);
-        this.setSize(255, 169);
+        this.setSize(255, 209);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setAlwaysOnTop(true);
 
@@ -123,6 +109,7 @@ public class lagSwitch extends JFrame implements ActionListener
         this.add(pulseTime);
         this.add(wifiState);
         this.add(offset);
+        this.add(tryFix);
     }
 
 
@@ -136,8 +123,8 @@ public class lagSwitch extends JFrame implements ActionListener
     {
         if (event.getSource() == toggleLag)
         {
-            toggle();
-            wifi(valToString(toggled));
+            wifi = !wifi;
+            wifi(valToString(wifi));
         }
         if (event.getSource() == pulseLag)
         {
@@ -152,10 +139,13 @@ public class lagSwitch extends JFrame implements ActionListener
             };
             if (offset.isSelected() == true)
             {
-                pulseTime.setText(Integer.toString(pulseTimeInt+(pulseTimeInt/42)));
-                //Convert str to int, add a val, convert to str and put it back
+                pulseTime.setText(Integer.toString(pulseTimeInt+(pulseTimeInt/42))); //Convert str to int, add a val, convert to str and put it back
             }
         }
-        wifiState.setVisible(toBool(toggled));
+        if (event.getSource() == tryFix)
+        {
+            wifi("on");
+        }
+        wifiState.setVisible(wifi);
     }
 }
